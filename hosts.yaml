@@ -1,0 +1,13 @@
+all:
+  children:
+    controllers:
+      hosts:
+        k8s-ctr-001.kvm.bbrain.io:
+        k8s-ctr-002.kvm.bbrain.io:
+        k8s-ctr-003.kvm.bbrain.io:
+    workers:
+      hosts:
+        k8s-wrk-001.kvm.bbrain.io:
+        k8s-wrk-002.kvm.bbrain.io:
+        k8s-wrk-003.kvm.bbrain.io:
+

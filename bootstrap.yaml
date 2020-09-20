@@ -1,0 +1,6 @@
+- hosts: all
+  gather_facts: False
+  tasks:
+    - name: Installing python
+      become: true
+      raw: test -e /usr/bin/python || pacman -Sy python --noconfirm
