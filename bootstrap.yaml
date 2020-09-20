@@ -3,4 +3,5 @@
   tasks:
     - name: Installing python
       become: true
+      changed_when: false
       raw: test -e /usr/bin/python || pacman -Sy python --noconfirm

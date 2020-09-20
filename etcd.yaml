@@ -1,0 +1,41 @@
+- hosts: controllers
+  tasks:
+    - name: Copying etcd
+      become: true
+      copy:
+        src: "/tmp/{{ item }}"
+        dest: /usr/local/bin/{{ item }}
+        mode: 755
+        owner: root
+        group: root
+      loop:
+        - etcd
+        - etcdctl
+
+    - name: Creating folders
+      become: true
+      file:
+        path: "{{ item }}"
+        mode: 0700
+        owner: root
+        group: root
+        state: directory
+      loop:
+        - /etc/etcd
+        - /var/lib/etcd
+
+    - name: Copying etcd certificates
+      become: true
+      copy:
+        src: "pki/{{ item }}"
+        dest: /etc/etcd
+      loop:
+        - "ca.pem"
+        - "kubernetes.pem"
+        - "kubernetes-key.pem"
+
+    - name: Creating etcd service file
+      become: true
+      template:
+        src: templates/etcd.service.j2
+        dest: /etc/systemd/system/etcd.service

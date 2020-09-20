@@ -28,9 +28,10 @@ all:
 
 ```bash
 ./gen-pki.sh
-k8s_public_ip="$(curl https://ipconfig.me/ip)" # Or set this manually
-ansible-playbook -i hosts.yaml bootstrap.yaml
-ansible-playbook -e "k8s_public_ip=${k8s_public_ip}" -i hosts.yaml distrib_certs.yaml
+k8s_public_ip="$(curl https://ifconfig.me/ip)" # Or set this manually
+k8s_encryption_key="$(head -c 32 /dev/urandom | base64)"
+ansible-playbook -i hosts.yaml site.yaml \
+                 -e "k8s_public_ip=${k8s_public_ip},k8s_encryption_key=${k8s_encryption_key}"
 ```
 
 ## pod-cidrs

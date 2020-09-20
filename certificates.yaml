@@ -1,26 +1,15 @@
 - hosts: localhost
   connection: local
   tasks:
-    - name: Get Public IP
-      uri:
-        url: https://ifconfig.me/ip
-        method: GET
-        return_content: yes
-      register: pub_ip
-    
-    - name: Set Public IP fact (localhost)
-      set_fact:
-        k8s_public_ip: "{{ pub_ip.content }}"
-    
-    - debug:
-        var: k8s_public_ip
+    - name: Generating certificates
+      command: ./gen-pki.sh
+      tags:
+        - never
+        - gen-pki
+
 
 - hosts: all
   tasks:
-    - name: Set Public IP fact (all)
-      set_fact:
-        k8s_public_ip: "{{ hostvars['localhost']['k8s_public_ip'] }}"
-
     - name: Copying certificates to machines (1/2)
       copy:
         src: "pki/{{ item }}"

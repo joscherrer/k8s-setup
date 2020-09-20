@@ -1,0 +1,55 @@
+- name: Bootstrap
+  import_playbook: bootstrap.yaml
+
+- hosts: localhost
+  connection: local
+  vars:
+    k8s_wrk_nodes: []
+  tasks:
+    - name: Generate node names
+      set_fact:
+        k8s_wrk_nodes: "{{ k8s_wrk_nodes + [ item.split('.')[0] ] }}"
+      loop: "{{ groups['workers'] }}"
+
+    - name: Downloading etcd
+      uri:
+        url: "{{ etcd_url }}"
+        dest: /tmp/etcd.tar.gz
+        follow_redirects: all
+        status_code: [200, 302, 304]
+      register: etcd_dl
+
+    - name: Extracting etcd
+      unarchive:
+        src: "/tmp/etcd.tar.gz"
+        dest: "/tmp/"
+        extra_opts:
+          - --strip-components=1
+        exclude:
+          - README.md
+          - README-etcdctl.md
+          - READMEv2-etcdctl.md
+          - Documentation
+
+- hosts: all
+  tasks:
+    - name: Setting node names (all)
+      set_fact:
+        k8s_wrk_nodes: >
+          "{{ hostvars['localhost']['k8s_wrk_nodes'] }}"
+
+- name: Certificates
+  import_playbook: certificates.yaml
+
+- name: Kubeconfigs
+  import_playbook: kubeconfigs.yaml
+
+- hosts: controllers
+  tasks:
+    - name: Generating encryption config
+      template:
+        src: templates/encryption-config.yaml.j2
+        dest: ~/encryption-config.yaml
+
+- name: Etcd setup
+  import_playbook: etcd.yaml
