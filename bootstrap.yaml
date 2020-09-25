@@ -1,7 +1,43 @@
-- hosts: all
-  gather_facts: False
+- hosts: controllers
   tasks:
-    - name: Installing python
+    - name: Creating directories
       become: true
-      changed_when: false
-      raw: test -e /usr/bin/python || pacman -Sy python --noconfirm
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - /etc/kubernetes/config
+        - /var/lib/kubernetes
+
+    - name: Downloading k8s binaries
+      become: true
+      uri:
+        url: "{{ k8s_binaries_url }}/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        mode: 0755
+        follow_redirects: all
+        status_code: [200, 302, 304]
+      loop:
+        - kube-apiserver
+        - kube-controller-manager
+        - kube-scheduler
+        - kubectl
+
+    - name: Copying certificates
+      become: true
+      copy:
+        src: "pki/{{ item }}"
+        dest: "/var/lib/kubernetes/{{ item }}"
+      loop:
+        - "ca.pem"
+        - "ca-key.pem"
+        - "kubernetes.pem"
+        - "kubernetes-key.pem"
+        - "service-account.pem"
+        - "service-account-key.pem"
+
+    - name: Generating encryption config
+      become: true
+      template:
+        src: templates/encryption-config.yaml.j2
+        dest: /var/lib/kubernetes/encryption-config.yaml
